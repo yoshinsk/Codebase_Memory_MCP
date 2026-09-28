@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "jmrc-kinki",
   "display_name": "JMRC近畿イベントシステム",
-  "allowed_root": "C:\\Users\\Yoshi\\Documents\\GitHub",
+  "allowed_root": "C:\\Users\\Yoshi\\Documents\\GitHub\\jmrckinki",
   "runtime": {
     "cache_dir": "C:\\Users\\Yoshi\\AppData\\Local\\CodebaseMemoryMCP",
     "max_memory_mb": 2048

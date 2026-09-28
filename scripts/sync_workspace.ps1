@@ -193,9 +193,8 @@ foreach ($definition in $projectDefinitions) {
     }
 
     $projectPath = Resolve-ExistingDirectory -Path (Get-RequiredString -Object $definition -Name 'path') -Label "projects[$projectId].path"
-    if (-not (Test-PathWithinRoot -Path $projectPath -Root $allowedRoot) -or
-        $projectPath.Equals($allowedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "projects[$projectId].path はallowed_root配下の個別リポジトリでなければなりません: $projectPath"
+    if (-not (Test-PathWithinRoot -Path $projectPath -Root $allowedRoot)) {
+        throw "projects[$projectId].path はallowed_rootと同一または配下でなければなりません: $projectPath"
     }
     if (-not (Test-Path -LiteralPath (Join-Path $projectPath '.git'))) {
         throw "projects[$projectId].path はGitリポジトリではありません: $projectPath"
