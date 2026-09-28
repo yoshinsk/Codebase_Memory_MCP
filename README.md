@@ -261,6 +261,12 @@ Commit a single compressed file to your repo and your teammates skip the reindex
 
 The result is similar in spirit to graphify's `graphify-out/` directory, but as a single compressed file with explicit two-tier export, integrity-checked import, and zero merge friction.
 
+## Personal Workspace Management
+
+This fork adds a manifest-driven workspace entry point for indexing a deliberately selected set of local repositories. It does not replace the native graph engine, watcher, or MCP tools. The first workspace contains only `jmrckinki`; it keeps graph artifacts out of that repository and performs no persistent Codex configuration change.
+
+See [Workspace Operations](docs/WORKSPACE_OPERATIONS.md) for the manifest contract, process-scoped safety boundaries, dry-run validation, and the staged procedure for adding further repositories.
+
 ## How It Works
 
 codebase-memory-mcp is a **structural analysis backend** — it builds and queries the knowledge graph. It does **not** include an LLM. Instead, it relies on your MCP client (Claude Code, or any MCP-compatible agent) to be the intelligence layer.

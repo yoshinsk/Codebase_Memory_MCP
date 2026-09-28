@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "jmrc-kinki",
+  "display_name": "JMRC近畿イベントシステム",
+  "allowed_root": "C:\\Users\\Yoshi\\Documents\\GitHub",
+  "runtime": {
+    "cache_dir": "C:\\Users\\Yoshi\\AppData\\Local\\CodebaseMemoryMCP",
+    "max_memory_mb": 2048
+  },
+  "projects": [
+    {
+      "id": "jmrckinki",
+      "path": "C:\\Users\\Yoshi\\Documents\\GitHub\\jmrckinki",
+      "index_mode": "full",
+      "persistence": false,
+      "required_cbmignore_patterns": [
+        "/jmrckinki.sql",
+        "/httpdocs/entry/common/config.php",
+        "/httpdocs/entry/common/mailer.php",
+        "/httpdocs/entry/common/FCMNotification.php",
+        "/httpdocs/entry/storage/",
+        "/httpdocs/entry/admin/bankaccount.inc",
+        "/httpdocs/entry/admin/yuchoaccount.inc",
+        "/httpdocs/practice/admin/_debug.php"
+      ],
+      "cross_repo_targets": []
+    }
+  ]
+}
