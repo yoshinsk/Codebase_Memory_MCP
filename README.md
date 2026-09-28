@@ -1,4 +1,4 @@
-# codebase-memory-mcp
+# Codebase Memory MCP — 個人用複数プロジェクト・ワークスペース
 
 [![GitHub Release](https://img.shields.io/github/v/release/DeusData/codebase-memory-mcp?style=flat&color=blue)](https://github.com/DeusData/codebase-memory-mcp/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -17,6 +17,99 @@
 **The fastest and most efficient code intelligence engine for AI coding agents.** Full-indexes an average repository in milliseconds, the Linux kernel (28M LOC, 75K files) in 3 minutes. Answers structural queries in under 1ms. Ships as a native executable with a small verified runtime-asset set for macOS, Linux, and Windows — download, run `install`, done.
 
 High-quality parsing through [tree-sitter](https://tree-sitter.github.io/tree-sitter/) AST analysis across all 162 languages, enhanced with [**Hybrid LSP** semantic type resolution](#hybrid-lsp) for Python, TypeScript / JavaScript / JSX / TSX, PHP, C#, Go, C, C++, Java, Kotlin, Rust, and Perl — producing a persistent knowledge graph of functions, classes, call chains, HTTP routes, and cross-service links. 17 MCP tools. No language runtime, hosted service, or API key. Plug and play across 45 supported automatic/conditional client surfaces.
+
+## このフォークは、選択したローカルリポジトリをCodexで横断参照するための運用基盤です
+
+このリポジトリは、[DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) をベースに、個人環境で管理するリポジトリ集合を明示し、安全に索引するための定義とPowerShellスクリプトを加えたものです。MCP本体のグラフ生成・検索・横断リンク機能は上流実装を利用し、このフォークは「どのリポジトリを、どの範囲で、いつ索引してよいか」を管理します。
+
+初めて使う場合は、この節から「`jmrckinki` を再索引する」までを順に読みます。別プロジェクトを追加するときだけ「別プロジェクトの追加は、専用の親フォルダを作ってから行う」を参照してください。MCP本体の全機能、リリース検証、対応言語は後半の上流READMEと上流リポジトリを一次情報とします。
+
+### 初回ワークスペースは `jmrckinki` だけを索引します
+
+現在のワークスペース定義は [workspaces/jmrc-kinki.json](workspaces/jmrc-kinki.json) です。`jmrckinki` 以外、たとえば `jmrckinkimanage` は登録していません。複数プロジェクト運用の土台ではありますが、初回は対象を一つに限定して、索引精度・資源使用量・除外設定を確認します。
+
+| 項目 | 現在の値 | 意図 |
+| --- | --- | --- |
+| ワークスペースID | `jmrc-kinki` | JMRC近畿イベントシステム用の初期定義 |
+| 許可ルート | `C:\\Users\\Yoshi\\Documents\\GitHub\\jmrckinki` | このパス以外の索引を拒否する |
+| 索引対象 | `jmrckinki` | `full` モードで明示的に索引する |
+| グラフ共有ファイル | 無効 | `.codebase-memory/graph.db.zst` をリポジトリへ作成・コミットしない |
+| 自動索引・監視・UI | 無効 | Codexの作業中に勝手な再索引・常駐処理を行わない |
+
+機密性がある設定値、SQLダンプ、口座定義、サービスアカウント、デバッグ用ファイルは、`jmrckinki` 側の `.cbmignore` で除外します。同期スクリプトは、[ワークスペース定義](workspaces/jmrc-kinki.json) に記録した必須除外パターンと実ファイルを照合し、一つでも欠ければ索引を開始しません。
+
+ローカルに索引を保存することは、Codexにソースを渡さないことを意味しません。検索やコード取得を実行した結果は、通常のMCPツール応答として会話の文脈に入ります。したがって、索引前の `.cbmignore` 整備を情報管理の前提とします。
+
+### `jmrckinki` を再索引する
+
+索引は自動では更新しません。ソースを大きく変更した後、または横断調査の前に、まずドライランで対象範囲を確認してから手動で実行します。
+
+```powershell
+# 1. 定義・許可ルート・Gitリポジトリ・必須の .cbmignore を変更せず検証する
+.\scripts\sync_workspace.ps1 `
+  -WorkspaceFile .\workspaces\jmrc-kinki.json `
+  -DryRun
+
+# 2. 検証済みのリリース実行ファイルを指定して、1回だけ索引する
+$cbmExecutable = 'C:\\verified\\codebase-memory-mcp.exe'
+.\scripts\sync_workspace.ps1 `
+  -WorkspaceFile .\workspaces\jmrc-kinki.json `
+  -ExecutablePath $cbmExecutable
+```
+
+実行ファイルは、上流の[Release](https://github.com/DeusData/codebase-memory-mcp/releases)で公開されるSHA-256と来歴を確認したものだけを指定します。スクリプトは `CBM_ALLOWED_ROOT`、`CBM_CACHE_DIR`、`CBM_MEM_BUDGET_MB` を実行プロセス内にだけ設定し、ユーザー環境変数やCodex設定を書き換えません。詳細な検証条件と実行順序は [docs/WORKSPACE_OPERATIONS.md](docs/WORKSPACE_OPERATIONS.md) を参照してください。
+
+Codex側で登録済みのMCPを確認するには、次を実行します。OpenAI公式資料では、Codex CLIとIDE拡張機能のMCP設定は共有され、`codex mcp list` で登録状態を確認できます。[OpenAI Docs MCP](https://developers.openai.com/learn/docs-mcp)
+
+```powershell
+codex mcp get codebase-memory-mcp
+codex mcp list
+```
+
+この環境では、再起動後に `codebase-memory-mcp` の17ツールがCodexへ公開され、`jmrckinki` は `ready` 状態で確認済みです。索引状態は、Codexに「`jmrckinki` の `index_status` を確認」と依頼するか、MCPの `index_status` ツールで確認します。
+
+### グラフ検索は速い入口であり、原文確認を置き換えません
+
+初期索引では `jmrckinki` に1,389ノード、5,658エッジが生成されました。一方でPHPの一部には `parse_partial` が7件、`parse_unusable` が50件あります。これらのファイルでは、呼び出し関係や影響範囲をグラフだけで断定せず、必ず原文を確認してください。件数はソース変更と再索引で変わるため、作業開始時は `index_status` の最新値を優先します。
+
+通常の調査は、次の順序で行います。
+
+1. `search_graph` で関数、クラス、ルート、ファイルを特定する。
+2. `trace_path` または `search_code` で依存関係と呼び出し箇所を絞る。
+3. `get_code_snippet` と対象ファイルの原文で、実装・設定・テストを確認する。
+4. 変更後は必要なテストと、影響したプロジェクトの再索引を行う。
+
+### 別プロジェクトの追加は、専用の親フォルダを作ってから行う
+
+新しいリポジトリを追加するために、既存の `CBM_ALLOWED_ROOT` を `C:\\Users\\Yoshi\\Documents\\GitHub` 全体へ広げることはしません。そのフォルダには索引対象でないプロジェクトも含まれるためです。追加候補を専用の親フォルダへクローンし、その親フォルダを次のワークスペースの許可ルートにします。
+
+```text
+C:\\CodebaseMemoryWorkspace\\
+├── jmrckinki\\
+└── service-b\\
+```
+
+追加時は、次の順で進めます。
+
+1. 各リポジトリに `.cbmignore` を作成し、認証情報・鍵・ダンプ・生成物を除外する。
+2. 新しいワークスペースJSONに、専用親フォルダ、各リポジトリ、メモリ上限を定義する。
+3. `-DryRun` を実行して対象パスと除外設定を確認する。
+4. 最初は各リポジトリを独立して索引する。
+5. HTTP、gRPC、GraphQL、イベントなど、実際の接続点を確認できたものだけ `cross_repo_targets` に追加する。
+
+同じ業務に関係するという理由だけで横断リンクを作ると、存在しない依存関係を前提に調査してしまいます。横断リンクは、呼び出し側・受け側・プロトコル・確認方法を説明できる関係だけに限定します。
+
+### このフォークで管理するものと、上流に委ねるもの
+
+| 管理対象 | このフォーク | 上流 `codebase-memory-mcp` |
+| --- | --- | --- |
+| 索引対象のリポジトリと許可ルート | [ワークスペースJSON](workspaces/jmrc-kinki.json) | — |
+| 手動同期・事前検証 | [sync_workspace.ps1](scripts/sync_workspace.ps1) | — |
+| `.cbmignore` の必須パターン確認 | ワークスペースJSONと同期スクリプト | ファイル探索時の除外処理 |
+| グラフ生成、検索、横断リンク | — | [DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) |
+| リリース、SHA-256、来歴、脆弱性報告 | — | [Releases](https://github.com/DeusData/codebase-memory-mcp/releases) と [SECURITY.md](SECURITY.md) |
+
+このREADMEで解決しない運用上の疑問は、まず [docs/WORKSPACE_OPERATIONS.md](docs/WORKSPACE_OPERATIONS.md) を確認します。MCP本体の仕様や不具合は、上流リポジトリのドキュメントとIssueを確認してください。
 
 > **Research** — The design and benchmarks behind this project are described in the preprint [*Codebase-Memory: Tree-Sitter-Based Knowledge Graphs for LLM Code Exploration via MCP*](https://arxiv.org/abs/2603.27277) (arXiv:2603.27277). Evaluated across 31 real-world repositories: 83% answer quality, 10× fewer tokens, 2.1× fewer tool calls vs. file-by-file exploration.
 
@@ -260,12 +353,6 @@ Commit a single compressed file to your repo and your teammates skip the reindex
 - **Optional**: never committed unless you want it. Add `.codebase-memory/` to `.gitignore` if you prefer everyone to reindex from scratch.
 
 The result is similar in spirit to graphify's `graphify-out/` directory, but as a single compressed file with explicit two-tier export, integrity-checked import, and zero merge friction.
-
-## Personal Workspace Management
-
-This fork adds a manifest-driven workspace entry point for indexing a deliberately selected set of local repositories. It does not replace the native graph engine, watcher, or MCP tools. The first workspace contains only `jmrckinki`; it keeps graph artifacts out of that repository and performs no persistent Codex configuration change.
-
-See [Workspace Operations](docs/WORKSPACE_OPERATIONS.md) for the manifest contract, process-scoped safety boundaries, dry-run validation, and the staged procedure for adding further repositories.
 
 ## How It Works
 
